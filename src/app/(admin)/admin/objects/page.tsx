@@ -9,10 +9,12 @@ import { ExportButton } from "@/components/admin/export-button";
 import { DuplicateBadge } from "@/components/admin/duplicate-badge";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { formatEur } from "@/lib/format";
 
 interface ObjectRow {
   dehpNumber: string;
   totalQty: number;
+  totalCost: number;
   submissionCount: number;
   mtTeams: string[];
   lastDate: string;
@@ -45,6 +47,11 @@ const columns: Column<ObjectRow>[] = [
   {
     header: "Gesamtmenge",
     accessor: "totalQty",
+    className: "text-right",
+  },
+  {
+    header: "Gesamtkosten",
+    accessor: (row) => formatEur(row.totalCost),
     className: "text-right",
   },
   {

@@ -8,9 +8,10 @@ datasource db {
 }
 
 model Material {
-  id     Int      @id @default(autoincrement())
-  name   String   @unique
-  active Boolean  @default(true)
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  active    Boolean  @default(true)
+  unitPrice Float    @default(0) @map("unit_price")
 
   submissionItems SubmissionItem[]
 
@@ -18,14 +19,17 @@ model Material {
 }
 
 model Submission {
-  id         String   @id @default(uuid())
-  createdAt  DateTime @default(now()) @map("created_at")
-  mtTeamRaw  String   @map("mt_team_raw")
-  mtTeamNorm String   @map("mt_team_norm")
-  dehpNumber String   @map("dehp_number")
-  firstName  String   @map("first_name")
-  lastName   String   @map("last_name")
-  comment    String?
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now()) @map("created_at")
+  mtTeamRaw     String   @map("mt_team_raw")
+  mtTeamNorm    String   @map("mt_team_norm")
+  dehpNumber    String   @map("dehp_number")
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  address       String   @default("")
+  comment       String?
+  hasRadiator   Boolean  @default(false) @map("has_radiator")
+  photoComplete Boolean  @default(false) @map("photo_complete")
 
   items       SubmissionItem[]
   attachments Attachment[]
@@ -40,6 +44,7 @@ model SubmissionItem {
   submissionId String @map("submission_id")
   materialId   Int    @map("material_id")
   qty          Int
+  unitPrice    Float  @default(0) @map("unit_price")
 
   submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   material   Material   @relation(fields: [materialId], references: [id])
@@ -54,6 +59,7 @@ model Attachment {
   filename     String
   mime         String
   size         Int
+  category     String?
   createdAt    DateTime  @default(now()) @map("created_at")
 
   submission Submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)

@@ -26,7 +26,8 @@ import {
 interface ObjectDetail {
   dehpNumber: string;
   totalQty: number;
-  materialPivot: { name: string; qty: number }[];
+  totalCost: number;
+  materialPivot: { name: string; qty: number; cost: number }[];
   submissions: {
     id: string;
     createdAt: string;

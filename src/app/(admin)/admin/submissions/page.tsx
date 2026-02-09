@@ -7,8 +7,10 @@ import { Pagination } from "@/components/shared/pagination";
 import { FilterBar, FilterField } from "@/components/admin/filter-bar";
 import { ExportButton } from "@/components/admin/export-button";
 import { DuplicateBadge } from "@/components/admin/duplicate-badge";
+import { IncompleteBadge } from "@/components/admin/incomplete-badge";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { formatEur } from "@/lib/format";
 
 interface SubmissionRow {
   id: string;
@@ -17,8 +19,10 @@ interface SubmissionRow {
   dehpNumber: string;
   firstName: string;
   lastName: string;
+  address: string;
   isDuplicate: boolean;
-  items: { qty: number }[];
+  photoComplete: boolean;
+  items: { qty: number; unitPrice: number }[];
 }
 
 const filterFields: FilterField[] = [
@@ -27,6 +31,15 @@ const filterFields: FilterField[] = [
   { name: "mtTeam", label: "MT Team", type: "text", placeholder: "z.B. MT 01" },
   { name: "dehp", label: "DEHP", type: "text", placeholder: "DEHP Nummer" },
   { name: "lastName", label: "Nachname", type: "text", placeholder: "Nachname" },
+  {
+    name: "incomplete",
+    label: "Fotos",
+    type: "select",
+    options: [
+      { value: "", label: "Alle" },
+      { value: "true", label: "Unvollständig" },
+    ],
+  },
 ];
 
 const columns: Column<SubmissionRow>[] = [
@@ -46,10 +59,22 @@ const columns: Column<SubmissionRow>[] = [
   },
   { header: "Vorname", accessor: "firstName" },
   { header: "Nachname", accessor: "lastName" },
+  { header: "Adresse", accessor: "address" },
   {
     header: "Menge",
     accessor: (row) => row.items.reduce((sum, i) => sum + i.qty, 0),
     className: "text-right",
+  },
+  {
+    header: "Kosten",
+    accessor: (row) =>
+      formatEur(row.items.reduce((sum, i) => sum + i.qty * i.unitPrice, 0)),
+    className: "text-right",
+  },
+  {
+    header: "Fotos",
+    accessor: (row) =>
+      !row.photoComplete ? <IncompleteBadge /> : null,
   },
 ];
 

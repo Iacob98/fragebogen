@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DuplicateBadge } from "@/components/admin/duplicate-badge";
+import { IncompleteBadge } from "@/components/admin/incomplete-badge";
 import { PhotoGallery } from "@/components/admin/photo-gallery";
 import { MaterialPivotTable } from "@/components/admin/material-pivot-table";
 import { format } from "date-fns";
@@ -25,15 +26,20 @@ interface SubmissionDetail {
   dehpNumber: string;
   firstName: string;
   lastName: string;
+  address: string;
   comment: string | null;
+  hasRadiator: boolean;
+  photoComplete: boolean;
   isDuplicate: boolean;
   items: {
     qty: number;
+    unitPrice: number;
     material: { name: string };
   }[];
   attachments: {
     id: number;
     filename: string;
+    category: string | null;
   }[];
 }
 
@@ -68,6 +74,7 @@ export default function SubmissionDetailPage() {
   const materialData = data.items.map((item) => ({
     name: item.material.name,
     qty: item.qty,
+    cost: item.qty * item.unitPrice,
   }));
 
   return (
@@ -81,6 +88,7 @@ export default function SubmissionDetailPage() {
         </Button>
         <h2 className="text-2xl font-bold">Meldung Details</h2>
         {data.isDuplicate && <DuplicateBadge />}
+        {!data.photoComplete && <IncompleteBadge />}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -93,6 +101,8 @@ export default function SubmissionDetailPage() {
             <InfoRow label="MT Team" value={data.mtTeamNorm} />
             <InfoRow label="DEHP Nummer" value={data.dehpNumber} />
             <InfoRow label="Name" value={`${data.firstName} ${data.lastName}`} />
+            {data.address && <InfoRow label="Adresse" value={data.address} />}
+            <InfoRow label="Radiator" value={data.hasRadiator ? "Ja" : "Nein"} />
             {data.comment && (
               <div>
                 <p className="text-sm text-muted-foreground">Kommentar</p>
@@ -123,7 +133,11 @@ export default function SubmissionDetailPage() {
           <CardTitle>Fotos ({data.attachments.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <PhotoGallery attachments={data.attachments} />
+          <PhotoGallery
+            attachments={data.attachments}
+            grouped={true}
+            hasRadiator={data.hasRadiator}
+          />
         </CardContent>
       </Card>
     </div>

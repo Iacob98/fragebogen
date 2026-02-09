@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     {
       dehpNumber: string;
       totalQty: number;
+      totalCost: number;
       submissionCount: number;
       mtTeams: Set<string>;
       lastDate: Date;
@@ -42,9 +43,11 @@ export async function GET(request: NextRequest) {
     const key = sub.dehpNumber;
     const existing = groupMap.get(key);
     const qty = sub.items.reduce((sum, item) => sum + item.qty, 0);
+    const cost = sub.items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0);
 
     if (existing) {
       existing.totalQty += qty;
+      existing.totalCost += cost;
       existing.submissionCount++;
       existing.mtTeams.add(sub.mtTeamNorm);
       if (sub.createdAt > existing.lastDate) existing.lastDate = sub.createdAt;
@@ -52,6 +55,7 @@ export async function GET(request: NextRequest) {
       groupMap.set(key, {
         dehpNumber: key,
         totalQty: qty,
+        totalCost: cost,
         submissionCount: 1,
         mtTeams: new Set([sub.mtTeamNorm]),
         lastDate: sub.createdAt,

@@ -19,18 +19,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Loader2, Plus } from "lucide-react";
+import { formatEur } from "@/lib/format";
 
 interface MaterialData {
   id: number;
   name: string;
   active: boolean;
+  unitPrice: number;
 }
 
 export default function MaterialsPage() {
   const [materials, setMaterials] = useState<MaterialData[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editingPrices, setEditingPrices] = useState<Record<number, string>>({});
 
   const fetchMaterials = useCallback(async () => {
     const res = await fetch("/api/materials?all=true");
@@ -55,13 +59,40 @@ export default function MaterialsPage() {
   const addMaterial = async () => {
     if (!newName.trim()) return;
     setAdding(true);
+    const unitPrice = parseFloat(newPrice) || 0;
     await fetch("/api/materials", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim() }),
+      body: JSON.stringify({ name: newName.trim(), unitPrice }),
     });
     setNewName("");
+    setNewPrice("");
     setAdding(false);
+    fetchMaterials();
+  };
+
+  const updatePrice = async (id: number) => {
+    const raw = editingPrices[id];
+    if (raw === undefined) return;
+    const unitPrice = parseFloat(raw.replace(",", "."));
+    if (isNaN(unitPrice)) {
+      setEditingPrices((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      return;
+    }
+    await fetch("/api/materials", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, unitPrice }),
+    });
+    setEditingPrices((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     fetchMaterials();
   };
 
@@ -81,6 +112,16 @@ export default function MaterialsPage() {
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addMaterial()}
               className="max-w-sm"
+            />
+            <Input
+              placeholder="Stückpreis (€)"
+              value={newPrice}
+              onChange={(e) => setNewPrice(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addMaterial()}
+              className="max-w-[150px]"
+              type="number"
+              step="0.01"
+              min="0"
             />
             <Button onClick={addMaterial} disabled={adding || !newName.trim()}>
               {adding ? (
@@ -107,6 +148,7 @@ export default function MaterialsPage() {
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead className="text-right">Stückpreis</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Aktion</TableHead>
               </TableRow>
@@ -116,6 +158,46 @@ export default function MaterialsPage() {
                 <TableRow key={mat.id}>
                   <TableCell className="font-mono">{mat.id}</TableCell>
                   <TableCell>{mat.name}</TableCell>
+                  <TableCell className="text-right">
+                    {editingPrices[mat.id] !== undefined ? (
+                      <Input
+                        className="w-28 ml-auto text-right"
+                        autoFocus
+                        value={editingPrices[mat.id]}
+                        onChange={(e) =>
+                          setEditingPrices((prev) => ({
+                            ...prev,
+                            [mat.id]: e.target.value,
+                          }))
+                        }
+                        onBlur={() => updatePrice(mat.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") updatePrice(mat.id);
+                          if (e.key === "Escape")
+                            setEditingPrices((prev) => {
+                              const next = { ...prev };
+                              delete next[mat.id];
+                              return next;
+                            });
+                        }}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                      />
+                    ) : (
+                      <button
+                        className="font-mono hover:underline cursor-pointer"
+                        onClick={() =>
+                          setEditingPrices((prev) => ({
+                            ...prev,
+                            [mat.id]: String(mat.unitPrice),
+                          }))
+                        }
+                      >
+                        {formatEur(mat.unitPrice)}
+                      </button>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={mat.active ? "default" : "secondary"}>
                       {mat.active ? "Aktiv" : "Inaktiv"}

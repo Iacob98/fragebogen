@@ -11,6 +11,7 @@ import {
 import { MaterialPivotTable } from "@/components/admin/material-pivot-table";
 import { ExportButton } from "@/components/admin/export-button";
 import { format } from "date-fns";
+import { formatEur } from "@/lib/format";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -27,10 +28,12 @@ interface TeamDetail {
   mtTeamNorm: string;
   totalSubmissions: number;
   totalQty: number;
-  materialPivot: { name: string; qty: number }[];
+  totalCost: number;
+  materialPivot: { name: string; qty: number; cost: number }[];
   objects: {
     dehpNumber: string;
     totalQty: number;
+    totalCost: number;
     submissions: {
       id: string;
       createdAt: string;
@@ -87,7 +90,7 @@ export default function TeamDetailPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold">{data.totalSubmissions}</p>
@@ -104,6 +107,12 @@ export default function TeamDetailPage() {
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold">{data.totalQty}</p>
             <p className="text-sm text-muted-foreground">Gesamtmenge</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="text-3xl font-bold">{formatEur(data.totalCost)}</p>
+            <p className="text-sm text-muted-foreground">Gesamtkosten</p>
           </CardContent>
         </Card>
       </div>
@@ -128,7 +137,7 @@ export default function TeamDetailPage() {
                 {obj.dehpNumber}
               </Link>
               <span className="text-sm font-normal text-muted-foreground">
-                Menge: {obj.totalQty}
+                Menge: {obj.totalQty} | Kosten: {formatEur(obj.totalCost)}
               </span>
             </CardTitle>
           </CardHeader>

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name } = body;
+  const { name, unitPrice } = body;
 
   if (!name || typeof name !== "string" || name.trim().length === 0) {
     return NextResponse.json(
@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
   }
 
   const material = await prisma.material.create({
-    data: { name: name.trim() },
+    data: {
+      name: name.trim(),
+      unitPrice: typeof unitPrice === "number" ? unitPrice : 0,
+    },
   });
 
   return NextResponse.json(material, { status: 201 });
@@ -44,15 +47,19 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { id, active } = body;
+  const { id, active, unitPrice } = body;
 
-  if (typeof id !== "number" || typeof active !== "boolean") {
+  if (typeof id !== "number") {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
+  const data: Record<string, unknown> = {};
+  if (typeof active === "boolean") data.active = active;
+  if (typeof unitPrice === "number") data.unitPrice = unitPrice;
+
   const material = await prisma.material.update({
     where: { id },
-    data: { active },
+    data,
   });
 
   return NextResponse.json(material);

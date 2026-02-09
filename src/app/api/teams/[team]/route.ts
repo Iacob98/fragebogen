@@ -28,6 +28,7 @@ export async function GET(
     {
       dehpNumber: string;
       totalQty: number;
+      totalCost: number;
       submissions: typeof submissions;
     }
   >();
@@ -35,30 +36,39 @@ export async function GET(
   for (const sub of submissions) {
     const key = sub.dehpNumber;
     const existing = objectMap.get(key);
+    const qty = sub.items.reduce((sum, i) => sum + i.qty, 0);
+    const cost = sub.items.reduce((sum, i) => sum + i.qty * i.unitPrice, 0);
     if (existing) {
-      existing.totalQty += sub.items.reduce((sum, i) => sum + i.qty, 0);
+      existing.totalQty += qty;
+      existing.totalCost += cost;
       existing.submissions.push(sub);
     } else {
       objectMap.set(key, {
         dehpNumber: key,
-        totalQty: sub.items.reduce((sum, i) => sum + i.qty, 0),
+        totalQty: qty,
+        totalCost: cost,
         submissions: [sub],
       });
     }
   }
 
   // Build material pivot for entire team
-  const materialTotals = new Map<string, number>();
+  const materialTotals = new Map<string, { qty: number; cost: number }>();
   for (const sub of submissions) {
     for (const item of sub.items) {
       const name = item.material.name;
-      materialTotals.set(name, (materialTotals.get(name) || 0) + item.qty);
+      const existing = materialTotals.get(name) || { qty: 0, cost: 0 };
+      existing.qty += item.qty;
+      existing.cost += item.qty * item.unitPrice;
+      materialTotals.set(name, existing);
     }
   }
 
   const materialPivot = Array.from(materialTotals.entries())
-    .map(([name, qty]) => ({ name, qty }))
+    .map(([name, { qty, cost }]) => ({ name, qty, cost }))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const totalCost = materialPivot.reduce((sum, p) => sum + p.cost, 0);
 
   return NextResponse.json({
     mtTeamNorm,
@@ -66,5 +76,6 @@ export async function GET(
     materialPivot,
     totalSubmissions: submissions.length,
     totalQty: materialPivot.reduce((sum, p) => sum + p.qty, 0),
+    totalCost,
   });
 }

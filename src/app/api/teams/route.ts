@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     {
       mtTeamNorm: string;
       totalQty: number;
+      totalCost: number;
       objectCount: Set<string>;
       submissionCount: number;
     }
@@ -40,15 +41,18 @@ export async function GET(request: NextRequest) {
     const key = sub.mtTeamNorm;
     const existing = groupMap.get(key);
     const qty = sub.items.reduce((sum, item) => sum + item.qty, 0);
+    const cost = sub.items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0);
 
     if (existing) {
       existing.totalQty += qty;
+      existing.totalCost += cost;
       existing.submissionCount++;
       existing.objectCount.add(sub.dehpNumber);
     } else {
       groupMap.set(key, {
         mtTeamNorm: key,
         totalQty: qty,
+        totalCost: cost,
         objectCount: new Set([sub.dehpNumber]),
         submissionCount: 1,
       });
@@ -59,6 +63,7 @@ export async function GET(request: NextRequest) {
     .map((t) => ({
       mtTeamNorm: t.mtTeamNorm,
       totalQty: t.totalQty,
+      totalCost: t.totalCost,
       objectCount: t.objectCount.size,
       submissionCount: t.submissionCount,
     }))

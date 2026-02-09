@@ -1,19 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PhotoUploader } from "./photo-uploader";
+import { CategoryPhotoUploader } from "./photo-uploader";
 import { Loader2, Send } from "lucide-react";
+import {
+  PHOTO_CATEGORIES,
+  PHOTO_CATEGORY_KEYS,
+  getRequiredCategories,
+  type PhotoCategoryKey,
+} from "@/lib/constants";
 
 interface Material {
   id: number;
@@ -33,13 +40,28 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
   const [dehpNumber, setDehpNumber] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
+  const [hasRadiator, setHasRadiator] = useState(false);
   const [quantities, setQuantities] = useState<Record<number, number>>(() => {
     const init: Record<number, number> = {};
     for (const m of materials) init[m.id] = 0;
     return init;
   });
-  const [attachmentIds, setAttachmentIds] = useState<number[]>([]);
+  const [categoryAttachments, setCategoryAttachments] = useState<
+    Record<PhotoCategoryKey, number[]>
+  >(() => {
+    const init = {} as Record<PhotoCategoryKey, number[]>;
+    for (const key of PHOTO_CATEGORY_KEYS) init[key] = [];
+    return init;
+  });
+
+  const handleCategoryChange = useCallback(
+    (key: PhotoCategoryKey) => (ids: number[]) => {
+      setCategoryAttachments((prev) => ({ ...prev, [key]: ids }));
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +96,19 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
       return;
     }
 
+    // Validate photo completeness on client side
+    const requiredCats = getRequiredCategories(hasRadiator);
+    for (const key of requiredCats) {
+      const cat = PHOTO_CATEGORIES[key];
+      const ids = categoryAttachments[key] || [];
+      if (ids.length !== cat.required) {
+        setError(
+          `${cat.label}: нужно ${cat.required} фото, загружено ${ids.length}`
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     try {
@@ -85,9 +120,11 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
           dehpNumber,
           firstName,
           lastName,
+          address: address || undefined,
           comment: comment || undefined,
+          hasRadiator,
           items,
-          attachmentIds,
+          attachments: categoryAttachments,
         }),
       });
 
@@ -159,6 +196,17 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
             </div>
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="address" className="text-sm">Adresse</Label>
+            <Input
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Straße, Hausnummer, PLZ, Ort"
+              className="h-11 sm:h-9 text-base sm:text-sm"
+              autoComplete="street-address"
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="comment" className="text-sm">Kommentar</Label>
             <Textarea
               id="comment"
@@ -168,6 +216,16 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
               rows={2}
               className="text-base sm:text-sm"
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="hasRadiator"
+              checked={hasRadiator}
+              onCheckedChange={(checked) => setHasRadiator(checked === true)}
+            />
+            <Label htmlFor="hasRadiator" className="text-sm font-normal">
+              Радиатор имеется
+            </Label>
           </div>
         </CardContent>
       </Card>
@@ -209,10 +267,23 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
 
       <Card>
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-base sm:text-lg">Fotos</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Фото</CardTitle>
         </CardHeader>
-        <CardContent>
-          <PhotoUploader onFilesChange={setAttachmentIds} />
+        <CardContent className="space-y-3">
+          {PHOTO_CATEGORY_KEYS.map((key) => {
+            const cat = PHOTO_CATEGORIES[key];
+            const isRadiator = key === "RADIATOR";
+            return (
+              <CategoryPhotoUploader
+                key={key}
+                category={key}
+                label={cat.label}
+                required={cat.required}
+                disabled={isRadiator && !hasRadiator}
+                onFilesChange={handleCategoryChange(key)}
+              />
+            );
+          })}
         </CardContent>
       </Card>
 

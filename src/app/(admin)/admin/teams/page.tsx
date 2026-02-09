@@ -7,10 +7,12 @@ import { Pagination } from "@/components/shared/pagination";
 import { FilterBar, FilterField } from "@/components/admin/filter-bar";
 import { ExportButton } from "@/components/admin/export-button";
 import { Loader2 } from "lucide-react";
+import { formatEur } from "@/lib/format";
 
 interface TeamRow {
   mtTeamNorm: string;
   totalQty: number;
+  totalCost: number;
   objectCount: number;
   submissionCount: number;
 }
@@ -34,6 +36,11 @@ const columns: Column<TeamRow>[] = [
   {
     header: "Gesamtmenge",
     accessor: "totalQty",
+    className: "text-right",
+  },
+  {
+    header: "Gesamtkosten",
+    accessor: (row) => formatEur(row.totalCost),
     className: "text-right",
   },
 ];

@@ -24,22 +24,28 @@ export async function GET(
   });
 
   // Build material pivot
-  const materialTotals = new Map<string, number>();
+  const materialTotals = new Map<string, { qty: number; cost: number }>();
   for (const sub of submissions) {
     for (const item of sub.items) {
       const name = item.material.name;
-      materialTotals.set(name, (materialTotals.get(name) || 0) + item.qty);
+      const existing = materialTotals.get(name) || { qty: 0, cost: 0 };
+      existing.qty += item.qty;
+      existing.cost += item.qty * item.unitPrice;
+      materialTotals.set(name, existing);
     }
   }
 
   const pivot = Array.from(materialTotals.entries())
-    .map(([name, qty]) => ({ name, qty }))
+    .map(([name, { qty, cost }]) => ({ name, qty, cost }))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const totalCost = pivot.reduce((sum, p) => sum + p.cost, 0);
 
   return NextResponse.json({
     dehpNumber,
     submissions,
     materialPivot: pivot,
     totalQty: pivot.reduce((sum, p) => sum + p.qty, 0),
+    totalCost,
   });
 }

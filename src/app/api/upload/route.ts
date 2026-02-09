@@ -4,16 +4,24 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import { MAX_FILE_SIZE, ALLOWED_MIME_TYPES } from "@/lib/constants";
+import { MAX_FILE_SIZE, ALLOWED_MIME_TYPES, PHOTO_CATEGORY_KEYS } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const category = formData.get("category") as string | null;
 
     if (!file) {
       return NextResponse.json(
         { error: "Keine Datei hochgeladen" },
+        { status: 400 }
+      );
+    }
+
+    if (category && !PHOTO_CATEGORY_KEYS.includes(category as never)) {
+      return NextResponse.json(
+        { error: "Ungültige Kategorie" },
         { status: 400 }
       );
     }
@@ -51,6 +59,7 @@ export async function POST(request: NextRequest) {
         filename: file.name,
         mime: file.type,
         size: file.size,
+        category: category || null,
       },
     });
 
@@ -58,6 +67,7 @@ export async function POST(request: NextRequest) {
       id: attachment.id,
       filename: attachment.filename,
       size: attachment.size,
+      category: attachment.category,
     });
   } catch (err) {
     console.error("[upload] Error:", err);

@@ -7,12 +7,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Search, X } from "lucide-react";
 
-export interface FilterField {
-  name: string;
-  label: string;
-  type: "text" | "date";
-  placeholder?: string;
-}
+export type FilterField =
+  | {
+      name: string;
+      label: string;
+      type: "text" | "date";
+      placeholder?: string;
+    }
+  | {
+      name: string;
+      label: string;
+      type: "select";
+      options: { value: string; label: string }[];
+    };
 
 interface FilterBarProps {
   fields: FilterField[];
@@ -56,17 +63,34 @@ export function FilterBar({ fields, basePath }: FilterBarProps) {
           <Label htmlFor={field.name} className="text-xs">
             {field.label}
           </Label>
-          <Input
-            id={field.name}
-            type={field.type}
-            placeholder={field.placeholder}
-            value={values[field.name] || ""}
-            onChange={(e) =>
-              setValues((prev) => ({ ...prev, [field.name]: e.target.value }))
-            }
-            className="w-40 h-9"
-            onKeyDown={(e) => e.key === "Enter" && apply()}
-          />
+          {field.type === "select" ? (
+            <select
+              id={field.name}
+              value={values[field.name] || ""}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, [field.name]: e.target.value }))
+              }
+              className="w-40 h-9 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {field.options.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Input
+              id={field.name}
+              type={field.type}
+              placeholder={"placeholder" in field ? field.placeholder : undefined}
+              value={values[field.name] || ""}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, [field.name]: e.target.value }))
+              }
+              className="w-40 h-9"
+              onKeyDown={(e) => e.key === "Enter" && apply()}
+            />
+          )}
         </div>
       ))}
       <Button size="sm" onClick={apply} className="h-9">
