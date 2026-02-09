@@ -23,6 +23,7 @@ services:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/fragebogen?schema=public"
       AUTH_SECRET: "supersecret-change-in-production-please"
       NEXTAUTH_URL: "http://localhost:3001"
+      AUTH_TRUST_HOST: "true"
       UPLOAD_DIR: "uploads"
       PORT: "3001"
     volumes:
