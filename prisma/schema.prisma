@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Material {
+  id     Int      @id @default(autoincrement())
+  name   String   @unique
+  active Boolean  @default(true)
+
+  submissionItems SubmissionItem[]
+
+  @@map("materials")
+}
+
+model Submission {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  mtTeamRaw  String   @map("mt_team_raw")
+  mtTeamNorm String   @map("mt_team_norm")
+  dehpNumber String   @map("dehp_number")
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  comment    String?
+
+  items       SubmissionItem[]
+  attachments Attachment[]
+
+  @@index([mtTeamNorm])
+  @@index([dehpNumber])
+  @@map("submissions")
+}
+
+model SubmissionItem {
+  id           Int    @id @default(autoincrement())
+  submissionId String @map("submission_id")
+  materialId   Int    @map("material_id")
+  qty          Int
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  material   Material   @relation(fields: [materialId], references: [id])
+
+  @@map("submission_items")
+}
+
+model Attachment {
+  id           Int       @id @default(autoincrement())
+  submissionId String?   @map("submission_id")
+  storageKey   String    @map("storage_key")
+  filename     String
+  mime         String
+  size         Int
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  submission Submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model Notification {
+  id               Int       @id @default(autoincrement())
+  type             String    @default("DEHP_DUPLICATE")
+  dehpNumber       String    @map("dehp_number")
+  firstTriggeredAt DateTime  @default(now()) @map("first_triggered_at")
+  lastSeenCount    Int       @default(2) @map("last_seen_count")
+  isClosed         Boolean   @default(false) @map("is_closed")
+  closedAt         DateTime? @map("closed_at")
+
+  @@unique([type, dehpNumber])
+  @@map("notifications")
+}
+
+model AdminUser {
+  id           Int    @id @default(autoincrement())
+  username     String @unique
+  passwordHash String @map("password_hash")
+
+  @@map("admin_users")
+}
