@@ -33,10 +33,11 @@ export async function GET(
 
   try {
     const buffer = await readFile(filePath);
+    const encodedFilename = encodeURIComponent(attachment.filename);
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": attachment.mime,
-        "Content-Disposition": `inline; filename="${attachment.filename}"`,
+        "Content-Disposition": `inline; filename*=UTF-8''${encodedFilename}`,
         "Cache-Control": "private, max-age=86400",
       },
     });
