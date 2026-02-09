@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
   const dateDir = format(now, "yyyy/MM/dd");
   const uniqueName = `${uuidv4()}-${file.name}`;
   const storageKey = `${dateDir}/${uniqueName}`;
-  const uploadDir = process.env.UPLOAD_DIR || "uploads";
-  const fullDir = path.join(process.cwd(), uploadDir, dateDir);
+  const uploadDir = path.resolve(process.env.UPLOAD_DIR || "uploads");
+  const fullDir = path.join(uploadDir, dateDir);
 
   await mkdir(fullDir, { recursive: true });
 

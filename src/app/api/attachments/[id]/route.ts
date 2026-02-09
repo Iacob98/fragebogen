@@ -28,8 +28,8 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const uploadDir = process.env.UPLOAD_DIR || "uploads";
-  const filePath = path.join(process.cwd(), uploadDir, attachment.storageKey);
+  const uploadDir = path.resolve(process.env.UPLOAD_DIR || "uploads");
+  const filePath = path.join(uploadDir, attachment.storageKey);
 
   try {
     const buffer = await readFile(filePath);
@@ -40,7 +40,8 @@ export async function GET(
         "Cache-Control": "private, max-age=86400",
       },
     });
-  } catch {
+  } catch (err) {
+    console.error(`[attachments] File not found: ${filePath}`, err);
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 }

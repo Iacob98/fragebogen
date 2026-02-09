@@ -24,7 +24,7 @@ services:
       AUTH_SECRET: "supersecret-change-in-production-please"
       NEXTAUTH_URL: "http://localhost:3001"
       AUTH_TRUST_HOST: "true"
-      UPLOAD_DIR: "uploads"
+      UPLOAD_DIR: "/app/uploads"
       PORT: "3001"
     volumes:
       - uploads:/app/uploads
