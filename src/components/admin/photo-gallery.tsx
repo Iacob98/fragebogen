@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,8 @@ export function PhotoGallery({ attachments }: PhotoGalleryProps) {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+        <DialogContent className="max-w-4xl p-0 overflow-hidden" aria-describedby={undefined}>
+          <DialogTitle className="sr-only">Foto Ansicht</DialogTitle>
           <div className="relative flex items-center justify-center bg-black min-h-[60vh]">
             <Button
               variant="ghost"
