@@ -3,8 +3,12 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
+import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
 import { MAX_FILE_SIZE, ALLOWED_MIME_TYPES, PHOTO_CATEGORY_KEYS } from "@/lib/constants";
+
+const MAX_DIMENSION = 2000;
+const WEBP_QUALITY = 80;
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +46,8 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
     const dateDir = format(now, "yyyy/MM/dd");
-    const uniqueName = `${uuidv4()}-${file.name}`;
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+    const uniqueName = `${uuidv4()}-${baseName}.webp`;
     const storageKey = `${dateDir}/${uniqueName}`;
     const uploadDir = path.resolve(process.env.UPLOAD_DIR || "uploads");
     const fullDir = path.join(uploadDir, dateDir);
@@ -50,15 +55,20 @@ export async function POST(request: NextRequest) {
     await mkdir(fullDir, { recursive: true });
 
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(path.join(fullDir, uniqueName), buffer);
+    const compressed = await sharp(Buffer.from(bytes))
+      .rotate()
+      .resize(MAX_DIMENSION, MAX_DIMENSION, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: WEBP_QUALITY })
+      .toBuffer();
+
+    await writeFile(path.join(fullDir, uniqueName), compressed);
 
     const attachment = await prisma.attachment.create({
       data: {
         storageKey,
-        filename: file.name,
-        mime: file.type,
-        size: file.size,
+        filename: `${baseName}.webp`,
+        mime: "image/webp",
+        size: compressed.length,
         category: category || null,
       },
     });
