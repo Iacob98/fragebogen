@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
   const requiredCats = getRequiredCategories(data.hasRadiator);
   const photoComplete = requiredCats.every((key) => {
     const ids = data.attachments[key] || [];
-    return ids.length === PHOTO_CATEGORIES[key].required;
+    const cat = PHOTO_CATEGORIES[key];
+    return ids.length >= cat.min && ids.length <= cat.max;
   });
 
   // Snapshot current material prices

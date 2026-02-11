@@ -147,10 +147,10 @@ export function PhotoGallery({ attachments, grouped = false, hasRadiator = false
               <div className="flex items-center gap-2 mb-2">
                 <h4 className="text-sm font-medium">{cat.label}</h4>
                 <Badge
-                  variant={items.length === cat.required ? "default" : "secondary"}
+                  variant={items.length >= cat.min ? "default" : "secondary"}
                   className="text-xs"
                 >
-                  {items.length}/{cat.required}
+                  {items.length}/{cat.min}–{cat.max}
                 </Badge>
               </div>
               {items.length > 0 ? (

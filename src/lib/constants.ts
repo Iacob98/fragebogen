@@ -9,15 +9,15 @@ export const ALLOWED_MIME_TYPES = [
 export const ITEMS_PER_PAGE = 25;
 
 export const PHOTO_CATEGORIES = {
-  IN_HOUSE: { label: "Фото в доме", required: 1 },
-  CONNECTION_ROUTE: { label: "Фото подключки (трасса)", required: 1 },
-  CONNECTION_INSIDE_NO_INSULATION: { label: "Фото подключки внутри без изоляции", required: 2 },
-  INSIDE_ROUTE_NO_INSULATION: { label: "Фото трассы без изоляции внутри дома", required: 5 },
-  AIR_OPEN: { label: "Воздухан открытый", required: 5 },
-  INSULATION: { label: "Изоляция", required: 5 },
-  RADIATOR: { label: "Радиатор", required: 9, conditional: true },
-  CLEAN_OUTSIDE: { label: "Чистота на объекте — Снаружи", required: 3 },
-  CLEAN_INSIDE: { label: "Чистота на объекте — Внутри", required: 3 },
+  IN_HOUSE: { label: "Фото в доме", min: 1, max: 10 },
+  CONNECTION_ROUTE: { label: "Фото подключки (трасса)", min: 1, max: 10 },
+  FOAM_HOLE: { label: "Фото отверстия залитой пеной снаружи и внутри", min: 2, max: 10 },
+  INSIDE_ROUTE_NO_INSULATION: { label: "Фото трассы без изоляции внутри дома", min: 5, max: 10 },
+  AIR_OPEN: { label: "Воздухан открытый", min: 5, max: 10 },
+  INSULATION: { label: "Изоляция", min: 5, max: 10 },
+  RADIATOR: { label: "Радиатор", min: 0, max: 10, conditional: true },
+  CLEAN_OUTSIDE: { label: "Чистота на объекте — Снаружи", min: 3, max: 10 },
+  CLEAN_INSIDE: { label: "Чистота на объекте — Внутри", min: 3, max: 10 },
 } as const;
 
 export type PhotoCategoryKey = keyof typeof PHOTO_CATEGORIES;
@@ -32,7 +32,7 @@ export function getRequiredCategories(hasRadiator: boolean): PhotoCategoryKey[] 
 
 export function getExpectedPhotoCount(hasRadiator: boolean): number {
   return getRequiredCategories(hasRadiator).reduce(
-    (sum, key) => sum + PHOTO_CATEGORIES[key].required,
+    (sum, key) => sum + PHOTO_CATEGORIES[key].min,
     0
   );
 }

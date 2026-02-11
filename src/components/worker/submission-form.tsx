@@ -101,9 +101,15 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
     for (const key of requiredCats) {
       const cat = PHOTO_CATEGORIES[key];
       const ids = categoryAttachments[key] || [];
-      if (ids.length !== cat.required) {
+      if (ids.length < cat.min) {
         setError(
-          `${cat.label}: нужно ${cat.required} фото, загружено ${ids.length}`
+          `${cat.label}: минимум ${cat.min} фото, загружено ${ids.length}`
+        );
+        return;
+      }
+      if (ids.length > cat.max) {
+        setError(
+          `${cat.label}: максимум ${cat.max} фото, загружено ${ids.length}`
         );
         return;
       }
@@ -278,7 +284,8 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
                 key={key}
                 category={key}
                 label={cat.label}
-                required={cat.required}
+                min={cat.min}
+                max={cat.max}
                 disabled={isRadiator && !hasRadiator}
                 onFilesChange={handleCategoryChange(key)}
               />

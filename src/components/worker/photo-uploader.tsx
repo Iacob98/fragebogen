@@ -16,7 +16,8 @@ interface UploadedFile {
 interface CategoryPhotoUploaderProps {
   category: PhotoCategoryKey;
   label: string;
-  required: number;
+  min: number;
+  max: number;
   disabled?: boolean;
   onFilesChange: (ids: number[]) => void;
 }
@@ -24,7 +25,8 @@ interface CategoryPhotoUploaderProps {
 export function CategoryPhotoUploader({
   category,
   label,
-  required,
+  min,
+  max,
   disabled = false,
   onFilesChange,
 }: CategoryPhotoUploaderProps) {
@@ -34,7 +36,8 @@ export function CategoryPhotoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  const isFull = files.length >= required;
+  const hasEnough = files.length >= min;
+  const isFull = files.length >= max;
 
   const uploadFile = async (file: File): Promise<UploadedFile | null> => {
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
@@ -68,10 +71,10 @@ export function CategoryPhotoUploader({
   const handleFiles = useCallback(
     async (fileList: FileList | File[]) => {
       const fileArray = Array.from(fileList);
-      const remaining = required - files.length;
+      const remaining = max - files.length;
 
       if (fileArray.length > remaining) {
-        setError(`Максимум ${required} фото в этой категории`);
+        setError(`Максимум ${max} фото в этой категории`);
         return;
       }
 
@@ -89,7 +92,7 @@ export function CategoryPhotoUploader({
       onFilesChange(newFiles.map((f) => f.id));
       setUploading(false);
     },
-    [files, onFilesChange, required, category]
+    [files, onFilesChange, max, category]
   );
 
   const removeFile = (id: number) => {
@@ -111,11 +114,11 @@ export function CategoryPhotoUploader({
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium">{label}</h4>
         <div className="flex items-center gap-1.5">
-          {isFull && !disabled && (
+          {hasEnough && !disabled && (
             <CheckCircle2 className="h-4 w-4 text-green-600" />
           )}
-          <Badge variant={isFull && !disabled ? "default" : "secondary"} className="text-xs">
-            {files.length}/{required}
+          <Badge variant={hasEnough && !disabled ? "default" : "secondary"} className="text-xs">
+            {files.length}/{min}–{max}
           </Badge>
         </div>
       </div>

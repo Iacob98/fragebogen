@@ -39,20 +39,27 @@ export const submissionSchema = z
             path: ["attachments", key],
           });
         }
-        if (data.hasRadiator && ids.length !== cat.required) {
+        if (data.hasRadiator && ids.length > cat.max) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `${cat.label}: нужно ${cat.required} фото, загружено ${ids.length}`,
+            message: `${cat.label}: максимум ${cat.max} фото, загружено ${ids.length}`,
             path: ["attachments", key],
           });
         }
         continue;
       }
 
-      if (ids.length !== cat.required) {
+      if (ids.length < cat.min) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `${cat.label}: нужно ${cat.required} фото, загружено ${ids.length}`,
+          message: `${cat.label}: минимум ${cat.min} фото, загружено ${ids.length}`,
+          path: ["attachments", key],
+        });
+      }
+      if (ids.length > cat.max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${cat.label}: максимум ${cat.max} фото, загружено ${ids.length}`,
           path: ["attachments", key],
         });
       }
