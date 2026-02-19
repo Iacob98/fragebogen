@@ -12,6 +12,7 @@ model Material {
   name      String   @unique
   active    Boolean  @default(true)
   unitPrice Float    @default(0) @map("unit_price")
+  imageKey  String?  @map("image_key")
 
   submissionItems SubmissionItem[]
 

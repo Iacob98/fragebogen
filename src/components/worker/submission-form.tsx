@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CategoryPhotoUploader } from "./photo-uploader";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Package } from "lucide-react";
 import {
   PHOTO_CATEGORIES,
   PHOTO_CATEGORY_KEYS,
@@ -25,6 +25,7 @@ import {
 interface Material {
   id: number;
   name: string;
+  imageKey: string | null;
 }
 
 interface SubmissionFormProps {
@@ -247,9 +248,22 @@ export function SubmissionForm({ materials }: SubmissionFormProps) {
                 key={material.id}
                 className="flex items-center justify-between gap-3 py-1.5 border-b border-border/50 last:border-0"
               >
-                <Label className="flex-1 text-sm leading-tight min-w-0">
-                  {material.name}
-                </Label>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {material.imageKey ? (
+                    <img
+                      src={`/api/materials/${material.id}/image`}
+                      alt={material.name}
+                      className="w-10 h-10 rounded object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                      <Package className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <Label className="text-sm leading-tight min-w-0">
+                    {material.name}
+                  </Label>
+                </div>
                 <Input
                   type="number"
                   inputMode="numeric"

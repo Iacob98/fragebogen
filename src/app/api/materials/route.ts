@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { Prisma } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -47,7 +48,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { id, active, unitPrice } = body;
+  const { id, active, unitPrice, name } = body;
 
   if (typeof id !== "number") {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
@@ -56,11 +57,33 @@ export async function PATCH(request: NextRequest) {
   const data: Record<string, unknown> = {};
   if (typeof active === "boolean") data.active = active;
   if (typeof unitPrice === "number") data.unitPrice = unitPrice;
+  if (typeof name === "string") {
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      return NextResponse.json(
+        { error: "Name darf nicht leer sein" },
+        { status: 400 }
+      );
+    }
+    data.name = trimmed;
+  }
 
-  const material = await prisma.material.update({
-    where: { id },
-    data,
-  });
-
-  return NextResponse.json(material);
+  try {
+    const material = await prisma.material.update({
+      where: { id },
+      data,
+    });
+    return NextResponse.json(material);
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "Ein Material mit diesem Namen existiert bereits" },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 }

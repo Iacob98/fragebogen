@@ -33,7 +33,7 @@ export default async function FormPage() {
       </header>
       <main className="px-3 sm:px-4 py-4 sm:py-6 pb-24 sm:pb-6">
         <SubmissionForm
-          materials={materials.map((m) => ({ id: m.id, name: m.name }))}
+          materials={materials.map((m) => ({ id: m.id, name: m.name, imageKey: m.imageKey }))}
         />
       </main>
     </div>
