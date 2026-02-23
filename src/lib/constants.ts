@@ -36,3 +36,28 @@ export function getExpectedPhotoCount(hasRadiator: boolean): number {
     0
   );
 }
+
+export const ORDER_STATUSES = {
+  NEW: { label: "Новый", variant: "blue" },
+  PROCESSING: { label: "В обработке", variant: "yellow" },
+  ORDERED: { label: "Заказано", variant: "orange" },
+  DELIVERED: { label: "Доставлено", variant: "green" },
+  CANCELLED: { label: "Отменено", variant: "red" },
+} as const;
+
+export type OrderStatus = keyof typeof ORDER_STATUSES;
+
+export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  NEW: ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["ORDERED", "CANCELLED"],
+  ORDERED: ["DELIVERED", "CANCELLED"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
+export const ORDER_PRIORITIES = {
+  NORMAL: { label: "Обычный" },
+  URGENT: { label: "Срочный" },
+} as const;
+
+export type OrderPriority = keyof typeof ORDER_PRIORITIES;

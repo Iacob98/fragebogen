@@ -9,6 +9,7 @@ import {
   Users,
   Bell,
   Package,
+  ShoppingCart,
   LogOut,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/admin/submissions", label: "Meldungen", icon: FileText },
+  { href: "/admin/orders", label: "Заказы", icon: ShoppingCart },
   { href: "/admin/objects", label: "Objekte", icon: Building2 },
   { href: "/admin/teams", label: "Teams", icon: Users },
   { href: "/admin/notifications", label: "Benachrichtigungen", icon: Bell },
@@ -25,19 +27,25 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const [notifCount, setNotifCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {
-    const fetchCount = async () => {
+    const fetchCounts = async () => {
       try {
-        const res = await fetch("/api/notifications?status=open&countOnly=true");
-        const data = await res.json();
-        setNotifCount(data.count || 0);
+        const [notifRes, orderRes] = await Promise.all([
+          fetch("/api/notifications?status=open&countOnly=true"),
+          fetch("/api/orders?countOnly=true&status=NEW"),
+        ]);
+        const notifData = await notifRes.json();
+        setNotifCount(notifData.count || 0);
+        const orderData = await orderRes.json();
+        setOrderCount(orderData.count || 0);
       } catch {
         // ignore
       }
     };
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -67,6 +75,11 @@ export function Sidebar() {
               {item.href === "/admin/notifications" && notifCount > 0 && (
                 <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
                   {notifCount}
+                </Badge>
+              )}
+              {item.href === "/admin/orders" && orderCount > 0 && (
+                <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
+                  {orderCount}
                 </Badge>
               )}
             </Link>

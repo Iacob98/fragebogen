@@ -8,13 +8,15 @@ datasource db {
 }
 
 model Material {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  active    Boolean  @default(true)
-  unitPrice Float    @default(0) @map("unit_price")
-  imageKey  String?  @map("image_key")
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  active        Boolean  @default(true)
+  unitPrice     Float    @default(0) @map("unit_price")
+  imageKey      String?  @map("image_key")
+  articleNumber String?  @map("article_number")
 
-  submissionItems SubmissionItem[]
+  submissionItems    SubmissionItem[]
+  purchaseOrderItems PurchaseOrderItem[]
 
   @@map("materials")
 }
@@ -87,4 +89,46 @@ model AdminUser {
   passwordHash String @map("password_hash")
 
   @@map("admin_users")
+}
+
+model PurchaseOrder {
+  id          String   @id @default(uuid())
+  orderNumber Int      @unique @map("order_number")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  mtTeamRaw   String   @map("mt_team_raw")
+  mtTeamNorm  String   @map("mt_team_norm")
+  workerName  String   @map("worker_name")
+  comment     String?
+  priority    String   @default("NORMAL")
+  status      String   @default("NEW")
+  supplier    String?
+  statusNote  String?  @map("status_note")
+
+  items PurchaseOrderItem[]
+
+  @@index([mtTeamNorm])
+  @@index([status])
+  @@map("purchase_orders")
+}
+
+model TeamSettings {
+  id            Int    @id @default(autoincrement())
+  mtTeamNorm    String @unique @map("mt_team_norm")
+  branchAddress String @default("") @map("branch_address")
+
+  @@map("team_settings")
+}
+
+model PurchaseOrderItem {
+  id              Int    @id @default(autoincrement())
+  purchaseOrderId String @map("purchase_order_id")
+  materialId      Int    @map("material_id")
+  qty             Int
+  unitPrice       Float  @default(0) @map("unit_price")
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  material      Material      @relation(fields: [materialId], references: [id])
+
+  @@map("purchase_order_items")
 }

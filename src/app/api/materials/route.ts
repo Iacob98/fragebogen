@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name, unitPrice } = body;
+  const { name, unitPrice, articleNumber } = body;
 
   if (!name || typeof name !== "string" || name.trim().length === 0) {
     return NextResponse.json(
@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     data: {
       name: name.trim(),
       unitPrice: typeof unitPrice === "number" ? unitPrice : 0,
+      articleNumber: typeof articleNumber === "string" ? articleNumber.trim() || null : null,
     },
   });
 
@@ -48,7 +49,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { id, active, unitPrice, name } = body;
+  const { id, active, unitPrice, name, articleNumber } = body;
 
   if (typeof id !== "number") {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
@@ -66,6 +67,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.name = trimmed;
+  }
+  if (typeof articleNumber === "string") {
+    data.articleNumber = articleNumber.trim() || null;
   }
 
   try {

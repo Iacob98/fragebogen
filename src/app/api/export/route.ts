@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { generateCsv } from "@/lib/csv";
 import { exportParamsSchema } from "@/lib/validators";
 import { format } from "date-fns";
+import { ORDER_STATUSES, ORDER_PRIORITIES, type OrderStatus, type OrderPriority } from "@/lib/constants";
+import { formatOrderNumber } from "@/lib/format";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -167,6 +169,49 @@ export async function GET(request: NextRequest) {
 
       csv = generateCsv(rows);
       filename = `bericht_${format(new Date(), "yyyy-MM-dd")}.csv`;
+      break;
+    }
+
+    case "orders": {
+      const orderWhere: Record<string, unknown> = {};
+      if (from || to) {
+        orderWhere.createdAt = {};
+        if (from) (orderWhere.createdAt as Record<string, unknown>).gte = new Date(from);
+        if (to) {
+          const toDate = new Date(to);
+          toDate.setHours(23, 59, 59, 999);
+          (orderWhere.createdAt as Record<string, unknown>).lte = toDate;
+        }
+      }
+      if (mtTeam) orderWhere.mtTeamNorm = { contains: mtTeam.toUpperCase(), mode: "insensitive" };
+
+      const orders = await prisma.purchaseOrder.findMany({
+        where: orderWhere,
+        include: { items: { include: { material: true } } },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const rows: Record<string, unknown>[] = [];
+      for (const order of orders) {
+        for (const item of order.items) {
+          rows.push({
+            Nummer: formatOrderNumber(order.orderNumber),
+            Datum: format(order.createdAt, "dd.MM.yyyy HH:mm"),
+            "MT Team": order.mtTeamNorm,
+            Name: order.workerName,
+            Priorität: ORDER_PRIORITIES[order.priority as OrderPriority]?.label ?? order.priority,
+            Status: ORDER_STATUSES[order.status as OrderStatus]?.label ?? order.status,
+            Material: item.material.name,
+            Menge: item.qty,
+            Stückpreis: item.unitPrice,
+            Kosten: item.qty * item.unitPrice,
+            Lieferant: order.supplier || "",
+            Kommentar: order.comment || "",
+          });
+        }
+      }
+      csv = generateCsv(rows);
+      filename = `bestellungen_${format(new Date(), "yyyy-MM-dd")}.csv`;
       break;
     }
   }

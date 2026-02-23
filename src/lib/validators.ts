@@ -76,7 +76,7 @@ export const loginSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 
 export const exportParamsSchema = z.object({
-  type: z.enum(["submissions", "object", "team", "report"]),
+  type: z.enum(["submissions", "object", "team", "report", "orders"]),
   from: z.string().optional(),
   to: z.string().optional(),
   mtTeam: z.string().optional(),
@@ -84,3 +84,22 @@ export const exportParamsSchema = z.object({
 });
 
 export type ExportParams = z.infer<typeof exportParamsSchema>;
+
+export const purchaseOrderSchema = z.object({
+  mtTeam: z.string().min(1, "MT Team обязательно"),
+  workerName: z.string().min(1, "Имя обязательно"),
+  comment: z.string().optional(),
+  priority: z.enum(["NORMAL", "URGENT"]),
+  items: z.array(z.object({
+    materialId: z.number().int().positive(),
+    qty: z.number().int().min(1),
+  })).min(1, "Минимум один материал"),
+});
+
+export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;
+
+export const orderStatusUpdateSchema = z.object({
+  status: z.enum(["NEW", "PROCESSING", "ORDERED", "DELIVERED", "CANCELLED"]),
+  supplier: z.string().optional(),
+  statusNote: z.string().optional(),
+});

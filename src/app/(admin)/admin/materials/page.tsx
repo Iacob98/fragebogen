@@ -27,6 +27,7 @@ interface MaterialData {
   active: boolean;
   unitPrice: number;
   imageKey: string | null;
+  articleNumber: string | null;
 }
 
 export default function MaterialsPage() {
@@ -34,9 +35,11 @@ export default function MaterialsPage() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  const [newArticle, setNewArticle] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingPrices, setEditingPrices] = useState<Record<number, string>>({});
   const [editingNames, setEditingNames] = useState<Record<number, string>>({});
+  const [editingArticles, setEditingArticles] = useState<Record<number, string>>({});
   const [nameError, setNameError] = useState<Record<number, string>>({});
   const [uploadingImage, setUploadingImage] = useState<number | null>(null);
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
@@ -68,10 +71,15 @@ export default function MaterialsPage() {
     await fetch("/api/materials", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim(), unitPrice }),
+      body: JSON.stringify({
+        name: newName.trim(),
+        unitPrice,
+        articleNumber: newArticle.trim() || undefined,
+      }),
     });
     setNewName("");
     setNewPrice("");
+    setNewArticle("");
     setAdding(false);
     fetchMaterials();
   };
@@ -129,6 +137,22 @@ export default function MaterialsPage() {
       return next;
     });
     setNameError((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    fetchMaterials();
+  };
+
+  const updateArticle = async (id: number) => {
+    const raw = editingArticles[id];
+    if (raw === undefined) return;
+    await fetch("/api/materials", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, articleNumber: raw.trim() }),
+    });
+    setEditingArticles((prev) => {
       const next = { ...prev };
       delete next[id];
       return next;
@@ -195,6 +219,13 @@ export default function MaterialsPage() {
               step="0.01"
               min="0"
             />
+            <Input
+              placeholder="Artikel-Nr."
+              value={newArticle}
+              onChange={(e) => setNewArticle(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addMaterial()}
+              className="max-w-[150px]"
+            />
             <Button onClick={addMaterial} disabled={adding || !newName.trim()}>
               {adding ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -221,6 +252,7 @@ export default function MaterialsPage() {
                 <TableHead>ID</TableHead>
                 <TableHead>Bild</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Artikel-Nr.</TableHead>
                 <TableHead className="text-right">Stückpreis</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Aktion</TableHead>
@@ -310,6 +342,43 @@ export default function MaterialsPage() {
                         }
                       >
                         {mat.name}
+                      </button>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingArticles[mat.id] !== undefined ? (
+                      <Input
+                        className="w-36"
+                        autoFocus
+                        value={editingArticles[mat.id]}
+                        onChange={(e) =>
+                          setEditingArticles((prev) => ({
+                            ...prev,
+                            [mat.id]: e.target.value,
+                          }))
+                        }
+                        onBlur={() => updateArticle(mat.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") updateArticle(mat.id);
+                          if (e.key === "Escape")
+                            setEditingArticles((prev) => {
+                              const next = { ...prev };
+                              delete next[mat.id];
+                              return next;
+                            });
+                        }}
+                      />
+                    ) : (
+                      <button
+                        className="hover:underline cursor-pointer text-left text-muted-foreground"
+                        onClick={() =>
+                          setEditingArticles((prev) => ({
+                            ...prev,
+                            [mat.id]: mat.articleNumber || "",
+                          }))
+                        }
+                      >
+                        {mat.articleNumber || "—"}
                       </button>
                     )}
                   </TableCell>

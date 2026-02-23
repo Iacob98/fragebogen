@@ -70,12 +70,44 @@ export async function GET(
 
   const totalCost = materialPivot.reduce((sum, p) => sum + p.cost, 0);
 
+  const settings = await prisma.teamSettings.findUnique({
+    where: { mtTeamNorm },
+  });
+
   return NextResponse.json({
     mtTeamNorm,
+    branchAddress: settings?.branchAddress || "",
     objects: Array.from(objectMap.values()),
     materialPivot,
     totalSubmissions: submissions.length,
     totalQty: materialPivot.reduce((sum, p) => sum + p.qty, 0),
     totalCost,
   });
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ team: string }> }
+) {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { team } = await params;
+  const mtTeamNorm = decodeURIComponent(team).toUpperCase();
+  const body = await request.json();
+  const { branchAddress } = body;
+
+  if (typeof branchAddress !== "string") {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const settings = await prisma.teamSettings.upsert({
+    where: { mtTeamNorm },
+    create: { mtTeamNorm, branchAddress: branchAddress.trim() },
+    update: { branchAddress: branchAddress.trim() },
+  });
+
+  return NextResponse.json(settings);
 }

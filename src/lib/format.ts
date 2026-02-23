@@ -6,3 +6,7 @@ const eurFormatter = new Intl.NumberFormat("de-DE", {
 export function formatEur(value: number): string {
   return eurFormatter.format(value);
 }
+
+export function formatOrderNumber(n: number): string {
+  return `ЗЗ-${String(n).padStart(4, "0")}`;
+}

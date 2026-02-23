@@ -12,8 +12,10 @@ import { MaterialPivotTable } from "@/components/admin/material-pivot-table";
 import { ExportButton } from "@/components/admin/export-button";
 import { format } from "date-fns";
 import { formatEur } from "@/lib/format";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import {
   Table,
@@ -26,6 +28,7 @@ import {
 
 interface TeamDetail {
   mtTeamNorm: string;
+  branchAddress: string;
   totalSubmissions: number;
   totalQty: number;
   totalCost: number;
@@ -48,13 +51,19 @@ export default function TeamDetailPage() {
   const params = useParams();
   const [data, setData] = useState<TeamDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [branchAddress, setBranchAddress] = useState("");
+  const [savingAddress, setSavingAddress] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const res = await fetch(
         `/api/teams/${encodeURIComponent(params.team as string)}`
       );
-      if (res.ok) setData(await res.json());
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+        setBranchAddress(json.branchAddress || "");
+      }
       setLoading(false);
     };
     fetchData();
@@ -71,6 +80,16 @@ export default function TeamDetailPage() {
   if (!data) {
     return <p className="text-muted-foreground">Team nicht gefunden.</p>;
   }
+
+  const saveBranchAddress = async () => {
+    setSavingAddress(true);
+    await fetch(`/api/teams/${encodeURIComponent(data.mtTeamNorm)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ branchAddress }),
+    });
+    setSavingAddress(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -116,6 +135,35 @@ export default function TeamDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Team-Einstellungen</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3">
+            <div className="flex-1 max-w-md space-y-1.5">
+              <Label htmlFor="branchAddress" className="text-sm">Filialadresse</Label>
+              <Input
+                id="branchAddress"
+                value={branchAddress}
+                onChange={(e) => setBranchAddress(e.target.value)}
+                placeholder="Straße, PLZ, Ort"
+              />
+            </div>
+            <Button onClick={saveBranchAddress} disabled={savingAddress}>
+              {savingAddress ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-1" />
+                  Speichern
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
