@@ -1,5 +1,7 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { OrderForm } from "@/components/worker/order-form";
 import type { Metadata, Viewport } from "next";
@@ -24,11 +26,16 @@ export default async function OrderPage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="border-b bg-card sticky top-0 z-10">
-        <div className="px-4 py-3 sm:py-4 max-w-2xl mx-auto">
-          <h1 className="text-lg sm:text-xl font-bold">Заказ материалов</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Заполните все обязательные поля (*)
-          </p>
+        <div className="px-4 py-3 sm:py-4 max-w-2xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold">Заказ материалов</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Заполните все обязательные поля (*)
+            </p>
+          </div>
+          <Link href="/form" className="p-2 rounded-md hover:bg-muted transition-colors" title="Materialverbrauch melden">
+            <ClipboardList className="h-5 w-5 text-muted-foreground" />
+          </Link>
         </div>
       </header>
       <main className="px-3 sm:px-4 py-4 sm:py-6 pb-24 sm:pb-6">

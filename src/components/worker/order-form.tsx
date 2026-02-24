@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,8 +35,8 @@ export function OrderForm({ materials }: OrderFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [mtTeam, setMtTeam] = useState("");
-  const [workerName, setWorkerName] = useState("");
+  const [mtTeam, setMtTeam] = useLocalStorage("worker_mt_team", "");
+  const [workerName, setWorkerName] = useLocalStorage("worker_name", "");
   const [priority, setPriority] = useState<OrderPriority>("NORMAL");
   const [comment, setComment] = useState("");
   const [quantities, setQuantities] = useState<Record<number, number>>(() => {
